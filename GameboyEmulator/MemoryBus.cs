@@ -39,4 +39,14 @@ public class MemoryBus
         }
         _memory.WriteByte(address, value);
     }
+
+    public void LoadTestBytes(ushort startAddress, byte[] bytes)
+    {
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            ushort address = (ushort)(startAddress + i);
+            _memory.WriteByte(address, bytes[i]);
+        }
+    }
+
 }
