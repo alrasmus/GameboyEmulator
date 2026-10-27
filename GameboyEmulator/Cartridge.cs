@@ -33,5 +33,14 @@ public class Cartridge
         CartridgeType = _romData[0x0147];
         RomSizeCode = _romData[0x0148];
     }
+    public byte ReadByte(ushort address)
+    {
+        // Read a byte from ROM at specified address
+        if (address >= _romData.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(address), "Address is outside of loaded ROM data.");
+        }
+        return _romData[address];
+    }
 
 }
