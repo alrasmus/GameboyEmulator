@@ -16,11 +16,15 @@ public class Cartridge
     public int FileSize => _romData.Length;
 
 
-    // Constructor for initializig cartridge with Rom data from filepath
-    public Cartridge(string filepath)
+    // Constructors for initializig cartridge with Rom data from filepath
+    // Multiple constructors to allow for easier testing by passing byte array directly instead of reading from file
+    public Cartridge(string filepath) : this(File.ReadAllBytes(filepath))
+    {
+    }
+    public Cartridge(byte[] romData)
     {
         // Load the ROM data from file path
-        _romData = File.ReadAllBytes(filepath);
+        _romData = (byte[])romData.Clone();
 
         // Cartridge header is located from 0x0100 to 0x014F, if size is less than 0x0150, throw exception
         if (_romData.Length < 0x0150)
