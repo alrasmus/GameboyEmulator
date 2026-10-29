@@ -258,5 +258,180 @@ public class CpuTests
         // Assert the exception message correctly indicates the unsupported opcode
         Assert.Contains("0xD3", exception.Message);
     }
+    [Fact]
+    public void FlagsInitializeAsZeroTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[] { 0x00 });
+
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+
+        Assert.Equal((byte)0x00, cpu.F);
+    }
+    [Fact]
+    public void AddABBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 10, // LD A, 10
+            0x06, 20, // LD B, 20
+            0x80       // ADD A, B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)30, cpu.A);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+        Assert.Equal((ushort)0xC005, cpu.PC);
+    }
+    [Fact]
+    public void AddABZeroCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 250, // LD A, 250
+            0x06, 6,   // LD B, 6
+            0x80       // ADD A, B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)0, cpu.A);
+        Assert.True(cpu.z);
+        Assert.False(cpu.n);
+        Assert.True(cpu.h);
+        Assert.True(cpu.c);
+    }
+    [Fact]
+    public void AddABHalfCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 15, // LD A, 15
+            0x06, 1,  // LD B, 1
+            0x80      // ADD A, B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)16, cpu.A);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.True(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void AddABFullCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 240, // LD A, 240
+            0x06, 32,  // LD B, 32
+            0x80       // ADD A, B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)16, cpu.A);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+        Assert.True(cpu.c);
+    }
+    [Fact]
+    public void AddAHLBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x21, 0x00, 0xC1, // LD HL, 0xC100
+            0x36, 20,         // LD (HL), 20
+            0x3E, 10,         // LD A, 10
+            0x86              // ADD A, (HL)
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)30, cpu.A);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+        Assert.Equal((ushort)0xC008, cpu.PC);
+    }
+    [Fact]
+    public void AddAHLZeroCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x21, 0x00, 0xC1, // LD HL, 0xC100
+            0x36, 6,          // LD (HL), 6
+            0x3E, 250,        // LD A, 250
+            0x86              // ADD A, (HL)
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)0, cpu.A);
+        Assert.True(cpu.z);
+        Assert.False(cpu.n);
+        Assert.True(cpu.h);
+        Assert.True(cpu.c);
+    }
+    [Fact]
+    public void AddAImmediateBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 10, // LD A, 10
+            0xC6, 20  // ADD A, 20
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)30, cpu.A);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+        Assert.Equal((ushort)0xC004, cpu.PC);
+    }
+    [Fact]
+    public void AddAImmediateZeroCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 250, // LD A, 250
+            0xC6, 6    // ADD A, 6
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)0, cpu.A);
+        Assert.True(cpu.z);
+        Assert.False(cpu.n);
+        Assert.True(cpu.h);
+        Assert.True(cpu.c);
+    }
 
 }

@@ -8,13 +8,23 @@ public class CPU
     public ushort PC { get; private set; } // Program Counter
     public byte A { get; private set; } // Accumulator register
     
-    // Registers B, C, D, E, H, L
+    // 8-bit registers B, C, D, E, H, L
     public byte B { get; private set; }
     public byte C { get; private set; }
     public byte D { get; private set; }
     public byte E { get; private set; }
     public byte H { get; private set; }
     public byte L { get; private set; }
+
+    // Flag register, individual flags are stored as bools, Flag register is an expression-bodied property that combines the flags into a single byte
+    public bool z { get; private set; } // zero flag
+    public bool n { get; private set; } // subtract flag
+    public bool h { get; private set; } // half-carry flag
+    public bool c { get; private set; } // carry flag
+
+    public byte F => (byte)(
+        (z ? 0x80 : 0) | (n ? 0x40 : 0) | (h ? 0x20 : 0) | (c ? 0x10 : 0)
+    );
 
     // 16-bit register pairs
     public ushort BC => (ushort)((B << 8) | C);
@@ -27,6 +37,9 @@ public class CPU
         PC = 0xC000; // Entry point for GB roms
         A = 0; // Initialize accumulator
     }
+
+    public int result; // used to store intermediate results for arithmetic operations
+    public byte intermediateByte; // used to store byte values fetched from memory for operations
 
     public byte FetchByte()
     {
@@ -75,6 +88,9 @@ public class CPU
                 break;
             case 0x2E: // LD L, d8
                 L = FetchByte();
+                break;
+            case 0x36: // LD (HL), d8
+                _bus.WriteByte(HL, FetchByte());
                 break;
             case 0x3E: // LD A, d8 
                 A = FetchByte();
@@ -267,6 +283,98 @@ public class CPU
                 break;
             case 0x7F: // LD A, A
                 A = A;
+                break;
+            case 0x80: // ADD A, B
+                result = A + B;
+
+                z = (byte)result == 0;
+                n = false;
+                h = ((A & 0x0F) + (B &  0x0F)) > 0x0F;
+                c = result > 0xFF;
+
+                A = (byte)result;
+                break;
+            case 0x81: // ADD A, C
+                result = A + C;
+
+                z = (byte)result == 0;
+                n = false;
+                h = ((A & 0x0F) + (C &  0x0F)) > 0x0F;
+                c = result > 0xFF;
+                
+                A = (byte)result;
+                break;
+            case 0x82: // ADD A, D
+                result = A + D;
+
+                z = (byte)result == 0;
+                n = false;
+                h = ((A & 0x0F) + (D &  0x0F)) > 0x0F;
+                c = result > 0xFF;
+                
+                A = (byte)result;
+                break;
+            case 0x83: // ADD A, E
+                result = A + E;
+
+                z = (byte)result == 0;
+                n = false;
+                h = ((A & 0x0F) + (E &  0x0F)) > 0x0F;
+                c = result > 0xFF;
+                
+                A = (byte)result;
+                break;
+            case 0x84: // ADD A, H
+                result = A + H;
+
+                z = (byte)result == 0;
+                n = false;
+                h = ((A & 0x0F) + (H &  0x0F)) > 0x0F;
+                c = result > 0xFF;
+                
+                A = (byte)result;
+                break;
+            case 0x85: // ADD A, L
+                result = A + L;
+
+                z = (byte)result == 0;
+                n = false;
+                h = ((A & 0x0F) + (L &  0x0F)) > 0x0F;
+                c = result > 0xFF;
+                
+                A = (byte)result;
+                break;
+            case 0x86: // ADD A, (HL)
+                intermediateByte = _bus.ReadByte(HL);
+                result = A + intermediateByte;
+
+                z = (byte)result == 0;
+                n = false;
+                h = ((A & 0x0F) + (intermediateByte &  0x0F)) > 0x0F;
+                c = result > 0xFF;
+                
+                A = (byte)result;
+                break;
+            case 0x87: // ADD A, A
+                result = A + A;
+
+                z = (byte)result == 0;
+                n = false;
+                h = ((A & 0x0F) + (A &  0x0F)) > 0x0F;
+                c = result > 0xFF;
+                
+                A = (byte)result;
+                break;
+            case 0xC6: // ADD A, d8
+                intermediateByte = FetchByte();
+                result = A + intermediateByte;
+
+                z = (byte)result == 0;
+                n = false;
+                h = ((A & 0x0F) + (intermediateByte &  0x0F)) > 0x0F;
+                c = result > 0xFF;
+                
+                A = (byte)result;
                 break;
             default:
                 throw new NotImplementedException($"Opcode 0x{instruction:X2} not implemented.");
