@@ -81,6 +81,19 @@ public class CPU
         A = (byte)result;
         return;
     }
+    private void SBC(byte value) // helper method for SBC opcodes
+    {
+        byte carry = (byte)(c ? 1 : 0);
+        int result = A - value - carry;
+
+        z = (byte)result == 0;
+        n = true;
+        h = (A & 0x0F) < ((value & 0x0F) + carry);
+        c = A < (value + carry);
+
+        A = (byte)result;
+        return;
+    }
     public void Step()
     {
         // Fetch next instruction byte and execute it
@@ -389,6 +402,30 @@ public class CPU
             case 0x97: // SUB A
                 SUB(A);
                 break;
+            case 0x98: // SBC A, B
+                SBC(B);
+                break;
+            case 0x99: // SBC A, C
+                SBC(C);
+                break;
+            case 0x9A: // SBC A, D
+                SBC(D);
+                break;
+            case 0x9B: // SBC A, E
+                SBC(E);
+                break;
+            case 0x9C: // SBC A, H
+                SBC(H);
+                break;
+            case 0x9D: // SBC A, L
+                SBC(L);
+                break;
+            case 0x9E: // SBC A, (HL)
+                SBC(_bus.ReadByte(HL));
+                break;
+            case 0x9F: // SBC A, A
+                SBC(A);
+                break;
             case 0xC6: // ADD A, d8
                 ADD(FetchByte());
                 break;
@@ -397,6 +434,9 @@ public class CPU
                 break;
             case 0xD6: // SUB d8
                 SUB(FetchByte());
+                break;
+            case 0xDE: // SBC d8
+                SBC(FetchByte());
                 break;
             default:
                 throw new NotImplementedException($"Opcode 0x{instruction:X2} not implemented.");

@@ -620,5 +620,116 @@ public class CpuTests
         Assert.False(cpu.h);
         Assert.True(cpu.c);
     }
+    [Fact]
+    public void SbcBBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 10, // LD A, 10
+            0x06, 5,  // LD B, 5
+            0x98      // SBC A, B
+        });
 
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)5, cpu.A);
+        Assert.False(cpu.z);
+        Assert.True(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void SbcBZeroTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 10, // LD A, 10
+            0x06, 5,  // LD B, 5
+            0x90,     // SUB B (sets C = false)
+            0x98      // SBC A, B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)0, cpu.A);
+        Assert.True(cpu.z);
+        Assert.True(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void SbcBHalfBorrowTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 0x00, // LD A, 0x00
+            0x06, 0x01, // LD B, 0x01
+            0x90,       // SUB B (sets C = true)
+            0x3E, 0x10, // LD A, 0x10
+            0x06, 0x0F, // LD B, 0x0F
+            0x98        // SBC A, B
+        });
+
+        for (int i = 0; i < 6; i++)
+            cpu.Step();
+
+        Assert.Equal((byte)0, cpu.A);
+        Assert.True(cpu.z);
+        Assert.True(cpu.n);
+        Assert.True(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void SbcBFullBorrowTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 0x00, // LD A, 0x00
+            0x06, 0x01, // LD B, 0x01
+            0x90,       // SUB B (sets C = true)
+            0x3E, 5,    // LD A, 5
+            0x06, 7,    // LD B, 7
+            0x98        // SBC A, B
+        });
+
+        for (int i = 0; i < 6; i++)
+            cpu.Step();
+
+        Assert.Equal((byte)253, cpu.A);
+        Assert.False(cpu.z);
+        Assert.True(cpu.n);
+        Assert.True(cpu.h);
+        Assert.True(cpu.c);
+    }
+    [Fact]
+    public void SbcBMaximumValueWithCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 10,  // LD A, 10
+            0x06, 255, // LD B, 255
+            0x90,      // SUB B (sets C = true)
+            0x3E, 10,  // LD A, 10 (preserves C)
+            0x06, 255, // LD B, 255
+            0x98       // SBC A, B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)10, cpu.A);
+        Assert.False(cpu.z);
+        Assert.True(cpu.n);
+        Assert.True(cpu.h);
+        Assert.True(cpu.c);
+    }
 }
