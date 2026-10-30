@@ -50,7 +50,7 @@ public class CPU
 
         z = (byte)result == 0;
         n = false;
-        h = ((A & 0x0F) + (value &  0x0F)) > 0x0F;
+        h = ((A & 0x0F) + (value & 0x0F)) > 0x0F;
         c = result > 0xFF;
 
         A = (byte)result;
@@ -63,9 +63,21 @@ public class CPU
 
         z = (byte)result == 0;
         n = false;
-        h = ((A & 0x0F) + (value &  0x0F) + carry) > 0x0F;
+        h = ((A & 0x0F) + (value & 0x0F) + carry) > 0x0F;
         c = result > 0xFF;
         
+        A = (byte)result;
+        return;
+    }
+    private void SUB(byte value) // helper method for SUB opcodes
+    {
+        int result = A - value;
+
+        z = (byte)result == 0;
+        n = true;
+        h = (A & 0x0F) < (value & 0x0F);
+        c = A < value;
+
         A = (byte)result;
         return;
     }
@@ -353,11 +365,38 @@ public class CPU
             case 0x8F: // ADC A, A
                 ADC(A);
                 break;
+            case 0x90: // SUB B
+                SUB(B);
+                break;
+            case 0x91: // SUB C
+                SUB(C);
+                break;
+            case 0x92: // SUB D
+                SUB(D);
+                break;
+            case 0x93: // SUB E
+                SUB(E);
+                break;
+            case 0x94: // SUB H
+                SUB(H);
+                break;
+            case 0x95: // SUB L
+                SUB(L);
+                break;
+            case 0x96: // SUB HL
+                SUB(_bus.ReadByte(HL));
+                break;
+            case 0x97: // SUB A
+                SUB(A);
+                break;
             case 0xC6: // ADD A, d8
                 ADD(FetchByte());
                 break;
             case 0xCE: // ADC A, d8
                 ADC(FetchByte());
+                break;
+            case 0xD6: // SUB d8
+                SUB(FetchByte());
                 break;
             default:
                 throw new NotImplementedException($"Opcode 0x{instruction:X2} not implemented.");
