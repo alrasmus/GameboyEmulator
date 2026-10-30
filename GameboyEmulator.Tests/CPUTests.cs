@@ -852,4 +852,104 @@ public class CpuTests
         Assert.False(cpu.h);
         Assert.False(cpu.c);
     }
+    [Fact]
+    public void CPBBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 10, // LD A, 10
+            0x06, 5,  // LD B, 5
+            0xB8      // CP B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)10, cpu.A);
+        Assert.False(cpu.z);
+        Assert.True(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void CPBZeroTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 10, // LD A, 10
+            0x06, 10, // LD B, 10
+            0xB8      // CP B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)10, cpu.A);
+        Assert.True(cpu.z);
+        Assert.True(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void CPBHalfBorrowTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 0x10, // LD A, 0x10
+            0x06, 0x01, // LD B, 0x01
+            0xB8      // CP B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)16, cpu.A);
+        Assert.False(cpu.z);
+        Assert.True(cpu.n);
+        Assert.True(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void CPBFullBorrowTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 0x05,  // LD A, 5
+            0x06, 0x07, // LD B, 7
+            0xB8      // CP B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)5, cpu.A);
+        Assert.False(cpu.z);
+        Assert.True(cpu.n);
+        Assert.True(cpu.h);
+        Assert.True(cpu.c);
+    }
+    [Fact]
+    public void CPBFullBorrowWithoutHalfBorrowTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 0x01, // LD A, 0x01
+            0x06, 0x10, // LD B, 0x10
+            0xB8      // CP B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)1, cpu.A);
+        Assert.False(cpu.z);
+        Assert.True(cpu.n);
+        Assert.False(cpu.h);
+        Assert.True(cpu.c);
+    }
 }
