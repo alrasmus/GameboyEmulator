@@ -758,7 +758,7 @@ public class CpuTests
         var (cpu, _, _) = CreateSystem(new byte[]
         {
             0x3E, 0xD5,  // LD A, 0xD5 (11010101)
-            0x06, 0x00, // LD B, 0x47 (01000111)
+            0x06, 0x00, // LD B, 0x00 (00000000)
             0xA0
         });
 
@@ -770,6 +770,46 @@ public class CpuTests
         Assert.True(cpu.z);
         Assert.False(cpu.n);
         Assert.True(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void XorBBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 0xD5,  // LD A, 0xD5 (11010101)
+            0x06, 0x47, // LD B, 0x47 (01000111)
+            0xA8
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)146, cpu.A);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void XorBZeroTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 0xD5,  // LD A, 0xD5 (11010101)
+            0x06, 0xD5, // LD B, 0xD5 (11010101)
+            0xA8
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)0, cpu.A);
+        Assert.True(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
         Assert.False(cpu.c);
     }
 }

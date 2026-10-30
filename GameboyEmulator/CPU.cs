@@ -94,13 +94,25 @@ public class CPU
         A = (byte)result;
         return;
     }
-    private void AND(byte value)
+    private void AND(byte value) // helper method for AND opcodes
     {
         int result = A & value;
 
         z = (byte)result == 0;
         n = false;
         h = true;
+        c = false;
+
+        A = (byte)result;
+        return;
+    }
+    private void XOR(byte value) // helper method for XOR opcodes
+    {
+        int result = A ^ value;
+
+        z = (byte)result == 0;
+        n = false;
+        h = false;
         c = false;
 
         A = (byte)result;
@@ -462,6 +474,30 @@ public class CPU
             case 0xA7: // AND A
                 AND(A);
                 break;
+            case 0xA8: // XOR B
+                XOR(B);
+                break;
+            case 0xA9: // XOR C
+                XOR(C);
+                break;
+            case 0xAA: // XOR D
+                XOR(D);
+                break;
+            case 0xAB: // XOR E
+                XOR(E);
+                break;
+            case 0xAC: // XOR H
+                XOR(H);
+                break;
+            case 0xAD: // XOR L
+                XOR(L);
+                break;
+            case 0xAE: // XOR (HL)
+                XOR(_bus.ReadByte(HL));
+                break;
+            case 0xAF: // XOR A
+                XOR(A);
+                break;
             case 0xC6: // ADD A, d8
                 ADD(FetchByte());
                 break;
@@ -473,6 +509,12 @@ public class CPU
                 break;
             case 0xDE: // SBC d8
                 SBC(FetchByte());
+                break;
+            case 0xE6: // AND d8
+                AND(FetchByte());
+                break;
+            case 0xEE: // XOR d8
+                XOR(FetchByte());
                 break;
             default:
                 throw new NotImplementedException($"Opcode 0x{instruction:X2} not implemented.");
