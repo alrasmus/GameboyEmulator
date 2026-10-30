@@ -732,4 +732,44 @@ public class CpuTests
         Assert.True(cpu.h);
         Assert.True(cpu.c);
     }
+    [Fact]
+    public void AndBBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 0xD5,  // LD A, 0xD5 (11010101)
+            0x06, 0x47, // LD B, 0x47 (01000111)
+            0xA0
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)69, cpu.A);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.True(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void AndBZeroTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 0xD5,  // LD A, 0xD5 (11010101)
+            0x06, 0x00, // LD B, 0x47 (01000111)
+            0xA0
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)0, cpu.A);
+        Assert.True(cpu.z);
+        Assert.False(cpu.n);
+        Assert.True(cpu.h);
+        Assert.False(cpu.c);
+    }
 }

@@ -94,6 +94,18 @@ public class CPU
         A = (byte)result;
         return;
     }
+    private void AND(byte value)
+    {
+        int result = A & value;
+
+        z = (byte)result == 0;
+        n = false;
+        h = true;
+        c = false;
+
+        A = (byte)result;
+        return;
+    }
     public void Step()
     {
         // Fetch next instruction byte and execute it
@@ -425,6 +437,30 @@ public class CPU
                 break;
             case 0x9F: // SBC A, A
                 SBC(A);
+                break;
+            case 0xA0: // AND B
+                AND(B);
+                break;
+            case 0xA1: // AND C
+                AND(C);
+                break;
+            case 0xA2: // AND D
+                AND(D);
+                break;
+            case 0xA3: // AND E
+                AND(E);
+                break;
+            case 0xA4: // AND H
+                AND(H);
+                break;
+            case 0xA5: // AND L
+                AND(L);
+                break;
+            case 0xA6: // AND (HL)
+                AND(_bus.ReadByte(HL));
+                break;
+            case 0xA7: // AND A
+                AND(A);
                 break;
             case 0xC6: // ADD A, d8
                 ADD(FetchByte());
