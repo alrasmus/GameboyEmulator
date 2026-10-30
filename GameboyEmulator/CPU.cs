@@ -37,16 +37,37 @@ public class CPU
         PC = 0xC000; // Entry point for GB roms
         A = 0; // Initialize accumulator
     }
-
-    public int result; // used to store intermediate results for arithmetic operations
-    public byte intermediateByte; // used to store byte values fetched from memory for operations
-
     public byte FetchByte()
     {
         // Fetches next byte from memory at current PC and increments PC
         byte value = _bus.ReadByte(PC);
         PC++;
         return value;
+    }
+    private void ADD(byte value) // helper method for ADD opcodes
+    {
+        int result = A + value;
+
+        z = (byte)result == 0;
+        n = false;
+        h = ((A & 0x0F) + (value &  0x0F)) > 0x0F;
+        c = result > 0xFF;
+
+        A = (byte)result;
+        return;
+    }
+    private void ADC(byte value) // helper method for ADC opcodes
+    {
+        byte carry = (byte)(c ? 1 : 0);
+        int result = A + value + carry;
+
+        z = (byte)result == 0;
+        n = false;
+        h = ((A & 0x0F) + (value &  0x0F) + carry) > 0x0F;
+        c = result > 0xFF;
+        
+        A = (byte)result;
+        return;
     }
     public void Step()
     {
@@ -285,96 +306,58 @@ public class CPU
                 A = A;
                 break;
             case 0x80: // ADD A, B
-                result = A + B;
-
-                z = (byte)result == 0;
-                n = false;
-                h = ((A & 0x0F) + (B &  0x0F)) > 0x0F;
-                c = result > 0xFF;
-
-                A = (byte)result;
+                ADD(B);
                 break;
             case 0x81: // ADD A, C
-                result = A + C;
-
-                z = (byte)result == 0;
-                n = false;
-                h = ((A & 0x0F) + (C &  0x0F)) > 0x0F;
-                c = result > 0xFF;
-                
-                A = (byte)result;
+                ADD(C);
                 break;
             case 0x82: // ADD A, D
-                result = A + D;
-
-                z = (byte)result == 0;
-                n = false;
-                h = ((A & 0x0F) + (D &  0x0F)) > 0x0F;
-                c = result > 0xFF;
-                
-                A = (byte)result;
+                ADD(D);
                 break;
             case 0x83: // ADD A, E
-                result = A + E;
-
-                z = (byte)result == 0;
-                n = false;
-                h = ((A & 0x0F) + (E &  0x0F)) > 0x0F;
-                c = result > 0xFF;
-                
-                A = (byte)result;
+                ADD(E);
                 break;
             case 0x84: // ADD A, H
-                result = A + H;
-
-                z = (byte)result == 0;
-                n = false;
-                h = ((A & 0x0F) + (H &  0x0F)) > 0x0F;
-                c = result > 0xFF;
-                
-                A = (byte)result;
+                ADD(H);
                 break;
             case 0x85: // ADD A, L
-                result = A + L;
-
-                z = (byte)result == 0;
-                n = false;
-                h = ((A & 0x0F) + (L &  0x0F)) > 0x0F;
-                c = result > 0xFF;
-                
-                A = (byte)result;
+                ADD(L);
                 break;
             case 0x86: // ADD A, (HL)
-                intermediateByte = _bus.ReadByte(HL);
-                result = A + intermediateByte;
-
-                z = (byte)result == 0;
-                n = false;
-                h = ((A & 0x0F) + (intermediateByte &  0x0F)) > 0x0F;
-                c = result > 0xFF;
-                
-                A = (byte)result;
+                ADD(_bus.ReadByte(HL));
                 break;
             case 0x87: // ADD A, A
-                result = A + A;
-
-                z = (byte)result == 0;
-                n = false;
-                h = ((A & 0x0F) + (A &  0x0F)) > 0x0F;
-                c = result > 0xFF;
-                
-                A = (byte)result;
+                ADD(A);
+                break;
+            case 0x88: // ADC A, B
+                ADC(B);
+                break;
+            case 0x89: // ADC A, C
+                ADC(C);
+                break;
+            case 0x8A: // ADC A, D
+                ADC(D);
+                break;
+            case 0x8B: // ADC A, E
+                ADC(E);
+                break;
+            case 0x8C: // ADC A, H
+                ADC(H);
+                break;
+            case 0x8D: // ADC A, L
+                ADC(L);
+                break;
+            case 0x8E: // ADC A, (HL)
+                ADC(_bus.ReadByte(HL));
+                break;
+            case 0x8F: // ADC A, A
+                ADC(A);
                 break;
             case 0xC6: // ADD A, d8
-                intermediateByte = FetchByte();
-                result = A + intermediateByte;
-
-                z = (byte)result == 0;
-                n = false;
-                h = ((A & 0x0F) + (intermediateByte &  0x0F)) > 0x0F;
-                c = result > 0xFF;
-                
-                A = (byte)result;
+                ADD(FetchByte());
+                break;
+            case 0xCE: // ADC A, d8
+                ADC(FetchByte());
                 break;
             default:
                 throw new NotImplementedException($"Opcode 0x{instruction:X2} not implemented.");

@@ -433,5 +433,92 @@ public class CpuTests
         Assert.True(cpu.h);
         Assert.True(cpu.c);
     }
+    [Fact]
+    public void AdcABBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 10, // LD A, 10
+            0x06, 5,  // LD B, 5
+            0x88      // ADC A, B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)15, cpu.A);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void AdcABCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 255, // LD A, 255
+            0xC6, 1,   // ADD A, 1 (sets carry)
+            0x06, 5,   // LD B, 5
+            0x88       // ADC A, B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)6, cpu.A);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void AdcABHalfCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 255, // LD A, 255
+            0xC6, 1,   // ADD A, 1 (sets carry)
+            0x3E, 15,  // LD A, 15 (doesn't affect flags)
+            0x06, 0,   // LD B, 0
+            0x88       // ADC A, B
+        });
+
+        for (int i = 0; i < 5; i++)
+        {
+            cpu.Step();
+        }
+
+        Assert.Equal((byte)16, cpu.A);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.True(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void AdcABZeroResultTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 255, // LD A, 255
+            0xC6, 1,   // ADD A, 1 (sets carry)
+            0x06, 255, // LD B, 255
+            0x88       // ADC A, B
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)0, cpu.A);
+        Assert.True(cpu.z);
+        Assert.False(cpu.n);
+        Assert.True(cpu.h);
+        Assert.True(cpu.c);
+    }
 
 }
