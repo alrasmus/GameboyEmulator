@@ -118,6 +118,18 @@ public class CPU
         A = (byte)result;
         return;
     }
+    private void OR(byte value) // helper method for OR opcodes
+    {
+        int result = A | value;
+
+        z = (byte)result == 0;
+        n = false;
+        h = false;
+        c = false;
+
+        A = (byte)result;
+        return;
+    }
     public void Step()
     {
         // Fetch next instruction byte and execute it
@@ -498,6 +510,30 @@ public class CPU
             case 0xAF: // XOR A
                 XOR(A);
                 break;
+            case 0xB0: // OR B
+                OR(B);
+                break;
+            case 0xB1: // OR C
+                OR(C);
+                break;
+            case 0xB2: // OR D
+                OR(D);
+                break;
+            case 0xB3: // OR E
+                OR(E);
+                break;
+            case 0xB4: // OR H
+                OR(H);
+                break;
+            case 0xB5: // OR L
+                OR(L);
+                break;
+            case 0xB6: // OR (HL)
+                OR(_bus.ReadByte(HL));
+                break;
+            case 0xB7: // OR A
+                OR(A);
+                break;
             case 0xC6: // ADD A, d8
                 ADD(FetchByte());
                 break;
@@ -515,6 +551,9 @@ public class CPU
                 break;
             case 0xEE: // XOR d8
                 XOR(FetchByte());
+                break;
+            case 0xF6: // OR d8
+                OR(FetchByte());
                 break;
             default:
                 throw new NotImplementedException($"Opcode 0x{instruction:X2} not implemented.");
