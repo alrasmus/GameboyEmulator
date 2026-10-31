@@ -952,4 +952,91 @@ public class CpuTests
         Assert.False(cpu.h);
         Assert.True(cpu.c);
     }
+    [Fact]
+    public void LdBCMemoryTest()
+    {
+        var (cpu, bus, _) = CreateSystem(new byte[]
+        {
+            0x01, 0x00, 0xC0, // LD BC, 0xC000
+            0x3E, 0x42,       // LD A, 0x42
+            0x02,             // LD (BC), A
+            0x3E, 0x00,       // LD A, 0x00
+            0x0A              // LD A, (BC)
+        });
+
+        for (int i = 0; i < 5; i++)
+            cpu.Step();
+
+        Assert.Equal((byte)0x42, cpu.A);
+        Assert.Equal((byte)0x42, bus.ReadByte(0xC000));
+        Assert.Equal((ushort)0xC000, cpu.BC);
+    }
+    [Fact]
+    public void LdHLIncrementStoreTest()
+    {
+        var (cpu, bus, _) = CreateSystem(new byte[]
+        {
+            0x21, 0x00, 0xC0, // LD HL, 0xC000
+            0x3E, 0x42,       // LD A, 0x42
+            0x22              // LD (HL+), A
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)0x42, bus.ReadByte(0xC000));
+        Assert.Equal((ushort)0xC001, cpu.HL);
+    }
+    [Fact]
+    public void LdHLIncrementLoadTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x21, 0x00, 0xC0, // LD HL, 0xC000
+            0x36, 0x77,       // LD (HL), 0x77
+            0x2A              // LD A, (HL+)
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)0x77, cpu.A);
+        Assert.Equal((ushort)0xC001, cpu.HL);
+    }
+    [Fact]
+    public void LdHLDecrementStoreTest()
+    {
+        var (cpu, bus, _) = CreateSystem(new byte[]
+        {
+            0x21, 0x01, 0xC0, // LD HL, 0xC001
+            0x3E, 0x42,       // LD A, 0x42
+            0x32              // LD (HL-), A
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)0x42, bus.ReadByte(0xC001));
+        Assert.Equal((ushort)0xC000, cpu.HL);
+    }
+    [Fact]
+    public void LdHLDecrementLoadTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x21, 0x01, 0xC0, // LD HL, 0xC001
+            0x36, 0x77,       // LD (HL), 0x77
+            0x3A              // LD A, (HL-)
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((byte)0x77, cpu.A);
+        Assert.Equal((ushort)0xC000, cpu.HL);
+    }
 }

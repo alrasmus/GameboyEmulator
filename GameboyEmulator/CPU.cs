@@ -27,9 +27,33 @@ public class CPU
     );
 
     // 16-bit register pairs
-    public ushort BC => (ushort)((B << 8) | C);
-    public ushort DE => (ushort)((D << 8) | E);
-    public ushort HL => (ushort)((H << 8) | L);
+    public ushort BC
+    {
+        get => (ushort)((B << 8) | C);
+        set
+        {
+            B = (byte)(value >> 8);
+            C = (byte)(value & 0xFF);
+        }
+    }
+    public ushort DE
+    {
+        get => (ushort)((D << 8) | E);
+        set
+        {
+            D = (byte)(value >> 8);
+            E = (byte)(value & 0xFF);
+        }
+    }
+    public ushort HL 
+    {
+        get => (ushort)((H << 8) | L);
+        set
+        {
+            H = (byte)(value >> 8);
+            L = (byte)(value & 0xFF);
+        }
+    }
 
     public CPU(MemoryBus bus)
     {
@@ -141,6 +165,26 @@ public class CPU
 
         return;
     }
+    private byte INC(byte value) // helper method for INC opcodes
+    {
+        byte result = (byte)(value + 1);
+
+        z = result == 0;
+        n = false;
+        h = (value & 0x0F) == 0x0F;
+
+        return result;
+    }
+    private byte DEC(byte value) // helper method for DEC opcodes
+    {
+        byte result = (byte)(value - 1);
+
+        z = result == 0;
+        n = true;
+        h = (value & 0x0F) == 0x00;
+
+        return result;
+    }
     public void Step()
     {
         // Fetch next instruction byte and execute it
@@ -156,8 +200,29 @@ public class CPU
                 C = FetchByte();
                 B = FetchByte();
                 break;
+            case 0x02: // LD (BC), A
+                _bus.WriteByte(BC, A);
+                break;
+            case 0x03: // INC BC
+                BC++;
+                break;
+            case 0x04: // INC B
+                B = INC(B);
+                break;
+            case 0x05: // DEC B
+                B = DEC(B);
+                break;
             case 0x06: // LD B, d8
                 B = FetchByte();
+                break;
+            case 0x0A: // LD A, (BC)
+                A = _bus.ReadByte(BC);
+                break;
+            case 0x0C: // INC C
+                C = INC(C);
+                break;
+            case 0x0D: // DEC C
+                C = DEC(C);
                 break;
             case 0x0E: // LD C, d8
                 C = FetchByte();
@@ -166,8 +231,29 @@ public class CPU
                 E = FetchByte();
                 D = FetchByte();
                 break;
+            case 0x12: // LD DE, A
+                _bus.WriteByte(DE, A);
+                break;
+            case 0x13: // INC DE
+                DE++;
+                break;
+            case 0x14: // INC D
+                D = INC(D);
+                break;
+            case 0x15: // DEC D
+                D = DEC(D);
+                break;
             case 0x16: // LD D, d8
                 D = FetchByte();
+                break;
+            case 0x1A: // LD A, (DE)
+                A = _bus.ReadByte(DE);
+                break;
+            case 0x1C: // INC E
+                E = INC(E);
+                break;
+            case 0x1D: // DEC E
+                E = DEC(E);
                 break;
             case 0x1E: // LD E, d8
                 E = FetchByte();
@@ -176,14 +262,57 @@ public class CPU
                 L = FetchByte();
                 H = FetchByte();
                 break;
+            case 0x22: // LD (HL+), A
+                _bus.WriteByte(HL, A);
+                HL++;
+                break;
+            case 0x23: // INC HL
+                HL++;
+                break;
+            case 0x24: // INC H
+                H = INC(H);
+                break;
+            case 0x25: // DEC H
+                H = DEC(H);
+                break;
             case 0x26: // LD H, d8
                 H = FetchByte();
+                break;
+            case 0x2A: // LD A, (HL+)
+                A = _bus.ReadByte(HL);
+                HL++;
+                break;
+            case 0x2C: // INC L
+                L = INC(L);
+                break;
+            case 0x2D: // DEC L
+                L = DEC(L);
                 break;
             case 0x2E: // LD L, d8
                 L = FetchByte();
                 break;
+            case 0x32: // LD (HL-), A
+                _bus.WriteByte(HL, A);
+                HL--;
+                break;
+            case 0x34: // INC (HL)
+                _bus.WriteByte(HL, INC(_bus.ReadByte(HL)));
+                break;
+            case 0x35: // DEC (HL)
+                _bus.WriteByte(HL, DEC(_bus.ReadByte(HL)));
+                break;
             case 0x36: // LD (HL), d8
                 _bus.WriteByte(HL, FetchByte());
+                break;
+            case 0x3A: // LD A, (HL-)
+                A = _bus.ReadByte(HL);
+                HL--;
+                break;
+            case 0x3C: // INC A
+                A = INC(A);
+                break;
+            case 0x3D: // DEC A
+                A = DEC(A);
                 break;
             case 0x3E: // LD A, d8 
                 A = FetchByte();
