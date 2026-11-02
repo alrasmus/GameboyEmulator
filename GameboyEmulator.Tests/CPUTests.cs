@@ -1039,4 +1039,81 @@ public class CpuTests
         Assert.Equal((byte)0x77, cpu.A);
         Assert.Equal((ushort)0xC000, cpu.HL);
     }
+    [Fact]
+    public void AddHLBCTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x21, 0x00, 0xC0, // LD HL, 0xC000
+            0x01, 0x00, 0x10, // LD BC, 0x1000
+            0x09              // ADD HL, BC
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((ushort)0xD000, cpu.HL);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void AddHLDEHalfCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x21, 0xFF, 0x0F, // LD HL, 0x0FFF
+            0x11, 0x01, 0x00, // LD DE, 0x0001
+            0x19              // ADD HL, DE
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((ushort)0x1000, cpu.HL);
+        Assert.False(cpu.n);
+        Assert.True(cpu.h);
+        Assert.False(cpu.c);
+    }
+    [Fact]
+    public void AddHLBCFullCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x21, 0xFF, 0xFF, // LD HL, 0xFFFF
+            0x01, 0x01, 0x00, // LD BC, 0x0001
+            0x09              // ADD HL, BC
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((ushort)0x0000, cpu.HL);
+        Assert.True(cpu.h);
+        Assert.True(cpu.c);
+        Assert.False(cpu.n);
+    }
+    [Fact]
+    public void AddHLSPTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x21, 0x00, 0xC0, // LD HL, 0xC000
+            0x31, 0x00, 0x10, // LD SP, 0x1000
+            0x39              // ADD HL, SP
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal((ushort)0xD000, cpu.HL);
+        Assert.Equal((ushort)0x1000, cpu.SP);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+        Assert.False(cpu.c);
+    }
 }

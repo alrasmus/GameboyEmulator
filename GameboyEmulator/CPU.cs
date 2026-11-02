@@ -15,6 +15,7 @@ public class CPU
     public byte E { get; private set; }
     public byte H { get; private set; }
     public byte L { get; private set; }
+    public ushort SP { get; private set; } // Stack pointer
 
     // Flag register, individual flags are stored as bools, Flag register is an expression-bodied property that combines the flags into a single byte
     public bool z { get; private set; } // zero flag
@@ -185,6 +186,17 @@ public class CPU
 
         return result;
     }
+    private void ADDHL(ushort value) // helper method for ADD HL, rr opcodes
+    {
+        int result = HL + value;
+
+        n = false;
+        h = ((HL & 0x0FFF) + (value & 0x0FFF)) > 0x0FFF; // half carry occurs if the lower 12 bits overflow
+        c = result > 0xFFFF;
+
+        HL = (ushort)result;
+        return;
+    }
     public void Step()
     {
         // Fetch next instruction byte and execute it
@@ -214,6 +226,9 @@ public class CPU
                 break;
             case 0x06: // LD B, d8
                 B = FetchByte();
+                break;
+            case 0x09: // ADD HL, BC
+                ADDHL(BC);
                 break;
             case 0x0A: // LD A, (BC)
                 A = _bus.ReadByte(BC);
@@ -245,6 +260,9 @@ public class CPU
                 break;
             case 0x16: // LD D, d8
                 D = FetchByte();
+                break;
+            case 0x19: // ADD HL, DE
+                ADDHL(DE);
                 break;
             case 0x1A: // LD A, (DE)
                 A = _bus.ReadByte(DE);
@@ -278,6 +296,9 @@ public class CPU
             case 0x26: // LD H, d8
                 H = FetchByte();
                 break;
+            case 0x29: // ADD HL, HL
+                ADDHL(HL);
+                break;
             case 0x2A: // LD A, (HL+)
                 A = _bus.ReadByte(HL);
                 HL++;
@@ -291,9 +312,15 @@ public class CPU
             case 0x2E: // LD L, d8
                 L = FetchByte();
                 break;
+            case 0x031: // LD SP, d16
+                SP = (ushort)(FetchByte() | (FetchByte() << 8));
+                break;
             case 0x32: // LD (HL-), A
                 _bus.WriteByte(HL, A);
                 HL--;
+                break;
+            case 0x33: // INC SP
+                SP++;
                 break;
             case 0x34: // INC (HL)
                 _bus.WriteByte(HL, INC(_bus.ReadByte(HL)));
@@ -304,9 +331,15 @@ public class CPU
             case 0x36: // LD (HL), d8
                 _bus.WriteByte(HL, FetchByte());
                 break;
+            case 0x39: // ADD HL, SP
+                ADDHL(SP);
+                break;
             case 0x3A: // LD A, (HL-)
                 A = _bus.ReadByte(HL);
                 HL--;
+                break;
+            case 0x3B: // DEC SP
+                SP--;
                 break;
             case 0x3C: // INC A
                 A = INC(A);
