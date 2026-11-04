@@ -197,6 +197,73 @@ public class CPU
         HL = (ushort)result;
         return;
     }
+    private void DAA() // helper method for DAA opcode
+    {
+        int correction = 0;
+
+        if(!n) // after an addition
+        {
+            if(h || (A & 0x0F) > 0x09)
+            {
+                correction |= 0x06;
+            }
+            if(c || A > 0x99)
+            {
+                correction |= 0x60;
+                c = true;
+            }
+        }
+        else // after a subtraction
+        {
+            if(h)
+            {
+                correction |= 0x06;
+            }
+            if(c)
+            {
+                correction |= 0x60;
+            }
+        }
+
+        A = (byte)(n ? A - correction: A + correction);
+        z = A ==0;
+        h = false;
+        return;
+    }
+    private void RLCA() // helper method for RLCA opcode
+    {
+        c = (A & 0x80) != 0; // set carry flag if bit 7 is set
+        A = (byte)((A << 1) | (c ? 1 : 0)); // rotate left
+        z = false;
+        n = false;
+        h = false;
+    }
+    private void RRCA() // helper method for RRCA opcode
+    {
+        c = (A & 0x01) != 0; // set carry flag if bit 1 is set
+        A = (byte)((A >> 1) | (c ? 0x80 : 0)); // rotate right
+        z = false;
+        n = false;
+        h = false;
+    }
+    private void RLA() // helper method for RLA opcode
+    {
+        bool oldCarry = c;
+        c = (A & 0x80) != 0; // set carry flag
+        A = (byte)((A << 1) | (oldCarry ? 1 : 0)); // rotate left through carry
+        z = false;
+        n = false;
+        h = false;
+    }
+    private void RRA() // helper method for RRA opcode
+    {
+        bool oldCarry = c;
+        c = (A & 0x01) != 0; // set carry flag
+        A = (byte)((A >> 1) | (oldCarry ? 0x80 : 0)); // rotate right through carry
+        z = false;
+        n = false;
+        h = false;
+    }
     public void Step()
     {
         // Fetch next instruction byte and execute it
@@ -227,6 +294,9 @@ public class CPU
             case 0x06: // LD B, d8
                 B = FetchByte();
                 break;
+            case 0x07: // RLCA (Rotate A left)
+                RLCA();
+                break;
             case 0x09: // ADD HL, BC
                 ADDHL(BC);
                 break;
@@ -241,6 +311,9 @@ public class CPU
                 break;
             case 0x0E: // LD C, d8
                 C = FetchByte();
+                break;
+            case 0x0F: // RRCA (Rotate A right)
+                RRCA();
                 break;
             case 0x11: // LD DE, d16
                 E = FetchByte();
@@ -261,6 +334,9 @@ public class CPU
             case 0x16: // LD D, d8
                 D = FetchByte();
                 break;
+            case 0x17: // RLA (Rotate A left through carry)
+                RLA();
+                break;
             case 0x19: // ADD HL, DE
                 ADDHL(DE);
                 break;
@@ -275,6 +351,9 @@ public class CPU
                 break;
             case 0x1E: // LD E, d8
                 E = FetchByte();
+                break;
+            case 0x1F: // RRA (Rotate A right through carry)
+                RRA();
                 break;
             case 0x21: // LD HL, d16
                 L = FetchByte();
@@ -296,6 +375,9 @@ public class CPU
             case 0x26: // LD H, d8
                 H = FetchByte();
                 break;
+            case 0x27: // DAA (Decimal Adjust Accumulator)
+                DAA();
+                break;
             case 0x29: // ADD HL, HL
                 ADDHL(HL);
                 break;
@@ -311,6 +393,11 @@ public class CPU
                 break;
             case 0x2E: // LD L, d8
                 L = FetchByte();
+                break;
+            case 0x2F: // CPL (Complement A)
+                A = (byte)~A;
+                n = true;
+                h = true;
                 break;
             case 0x031: // LD SP, d16
                 SP = (ushort)(FetchByte() | (FetchByte() << 8));
@@ -331,6 +418,11 @@ public class CPU
             case 0x36: // LD (HL), d8
                 _bus.WriteByte(HL, FetchByte());
                 break;
+            case 0x37: // SCF (Set Carry Flag)
+                c = true;
+                n = false;
+                h = false;
+                break;
             case 0x39: // ADD HL, SP
                 ADDHL(SP);
                 break;
@@ -349,6 +441,11 @@ public class CPU
                 break;
             case 0x3E: // LD A, d8 
                 A = FetchByte();
+                break;
+            case 0x3F: // CCF (Complement Carry Flag)
+                c = !c;
+                n = false;
+                h = false;
                 break;
             case 0x40: // LD B, B
                 B = B;
