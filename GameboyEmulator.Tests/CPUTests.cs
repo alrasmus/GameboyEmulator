@@ -1116,4 +1116,118 @@ public class CpuTests
         Assert.False(cpu.h);
         Assert.False(cpu.c);
     }
+    [Fact]
+    public void RLCABasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 0x81, // LD A, 0x81
+            0x07        // RLCA
+        });
+
+        cpu.Step(); 
+        cpu.Step(); 
+
+        Assert.Equal(0x03, cpu.A);
+        Assert.True(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
+    [Fact]
+    public void RRCABasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+            0x3E, 0x81, // LD A, 0x81
+            0x0F        // RRCA
+        });
+
+        cpu.Step(); 
+        cpu.Step(); 
+
+        Assert.Equal(0xC0, cpu.A);
+        Assert.True(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
+    [Fact]
+    public void RLABasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x37,        // SCF
+        0x3E, 0x80,  // LD A, 0x80
+        0x17         // RLA
+        });
+
+        cpu.Step(); 
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0x01, cpu.A);
+        Assert.True(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
+    [Fact]
+    public void RRABasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x37,        // SCF
+        0x3E, 0x01,  // LD A, 0x80
+        0x1F         // RRA
+        });
+
+        cpu.Step(); 
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0x80, cpu.A);
+        Assert.True(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
+    [Fact]
+    public void CBPrefixRLCBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x06, 0x81, // LD B, 0x81
+        0xCB, 0x00  // RLC B (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0x03, cpu.B);
+        Assert.True(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
+    [Fact]
+    public void CBPrefixRRCBasicTest()
+    {
+        var (cpu, bus, _) = CreateSystem(new byte[]
+        {
+        0x21, 0x00, 0xC0, // LD HL, 0xC000
+        0x36, 0x81, // LD (HL), 0x81
+        0xCB, 0x0E  // RRC (HL) (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0xC0, bus.ReadByte(0xC000));
+        Assert.True(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
 }

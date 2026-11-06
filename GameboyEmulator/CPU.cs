@@ -831,6 +831,9 @@ public class CPU
             case 0xC6: // ADD A, d8
                 ADD(FetchByte());
                 break;
+            case 0xCB: // Prefix for extended opcodes, redirects to CB-prefixed instruction handler
+                ExecuteCB();
+                break;
             case 0xCE: // ADC A, d8
                 ADC(FetchByte());
                 break;
@@ -854,6 +857,86 @@ public class CPU
                 break;
             default:
                 throw new NotImplementedException($"Opcode 0x{instruction:X2} not implemented.");
+        }
+    }
+    private byte RLC(byte value) // Rotate left circular through carry for CB-prefixed instructions
+    {
+        int result = (value << 1) | (value >> 7); // Rotate left
+        c = (value & 0x80) != 0; // Set carry flag if bit 7 was set
+        z = (byte)result == 0;
+        n = false;
+        h = false;
+
+        return (byte)result;
+    }
+    private byte RRC(byte value) // Rotate right circular through carry for CB-prefixed instructions
+    {
+        int result = (value >> 1) | (value << 7); // Rotate right
+        c = (value & 0x01) != 0; // Set carry flag if bit 0 was set
+        z = (byte)result == 0;
+        n = false;
+        h = false;
+
+        return (byte)result;
+    }
+    private void ExecuteCB() // CB-prefixed instruction handler
+    {
+        // Fetch next instruction byte after 0xCB prefix
+        byte instruction = FetchByte();
+
+        // Switch statement for handling CB-prefixed opcodes
+        switch (instruction)
+        {
+            case 0x00: // RLC B
+                B = RLC(B);
+                break;
+            case 0x01: // RLC C
+                C = RLC(C);
+                break;
+            case 0x02: // RLC D
+                D = RLC(D);
+                break;
+            case 0x03: // RLC E
+                E = RLC(E);
+                break;
+            case 0x04: // RLC H
+                H = RLC(H);
+                break;
+            case 0x05: // RLC L
+                L = RLC(L);
+                break;
+            case 0x06: // RLC (HL)
+                _bus.WriteByte(HL, RLC(_bus.ReadByte(HL)));
+                break;
+            case 0x07: // RLC A
+                A = RLC(A);
+                break;
+            case 0x08: // RRC B
+                B = RRC(B);
+                break;
+            case 0x09: // RRC C
+                C = RRC(C);
+                break;
+            case 0x0A: // RRC D
+                D = RRC(D);
+                break;
+            case 0x0B: // RRC E
+                E = RRC(E);
+                break;
+            case 0x0C: // RRC H
+                H = RRC(H);
+                break;
+            case 0x0D: // RRC L
+                L = RRC(L);
+                break;
+            case 0x0E: // RRC (HL)
+                _bus.WriteByte(HL, RRC(_bus.ReadByte(HL)));
+                break;
+            case 0x0F: // RRC A
+                A = RRC(A);
+                break;
+            default:
+                throw new NotImplementedException($"Opcode 0xCB{instruction:X2} not implemented.");
         }
     }
 }
