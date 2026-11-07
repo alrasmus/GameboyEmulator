@@ -879,6 +879,28 @@ public class CPU
 
         return (byte)result;
     }
+    private byte RL(byte value) // Rotate left through carry for CB-prefixed instructions
+    {
+        bool oldCarry = c;
+        c = (value & 0x80) != 0; // Set carry flag if bit 7 was set
+        int result = (value << 1) | (oldCarry ? 1 : 0); // Rotate left through carry
+        z = (byte)result == 0;
+        n = false;
+        h = false;
+
+        return (byte)result;
+    }
+    private byte RR(byte value) // Rotate right through carry for CB-prefixed instructions
+    {
+        bool oldCarry = c;
+        c = (value & 0x01) != 0; // Set carry flag if bit 0 was set
+        int result = (value >> 1) | (oldCarry ? 0x80 : 0); // Rotate right through carry
+        z = (byte)result == 0;
+        n = false;
+        h = false;
+
+        return (byte)result;
+    }
     private void ExecuteCB() // CB-prefixed instruction handler
     {
         // Fetch next instruction byte after 0xCB prefix
@@ -934,6 +956,54 @@ public class CPU
                 break;
             case 0x0F: // RRC A
                 A = RRC(A);
+                break;
+            case 0x10: // RL B
+                B = RL(B);
+                break;
+            case 0x11: // RL C
+                C = RL(C);
+                break;
+            case 0x12: // RL D
+                D = RL(D);
+                break;
+            case 0x13: // RL E
+                E = RL(E);
+                break;
+            case 0x14: // RL H
+                H = RL(H);
+                break;
+            case 0x15: // RL L
+                L = RL(L);
+                break;
+            case 0x16: // RL (HL)
+                _bus.WriteByte(HL, RL(_bus.ReadByte(HL)));
+                break;
+            case 0x17: // RL A
+                A = RL(A);
+                break;
+            case 0x18: // RR B
+                B = RR(B);
+                break;
+            case 0x19: // RR C
+                C = RR(C);
+                break;
+            case 0x1A: // RR D
+                D = RR(D);
+                break;
+            case 0x1B: // RR E
+                E = RR(E);
+                break;
+            case 0x1C: // RR H
+                H = RR(H);
+                break;
+            case 0x1D: // RR L
+                L = RR(L);
+                break;
+            case 0x1E: // RR (HL)
+                _bus.WriteByte(HL, RR(_bus.ReadByte(HL)));
+                break;
+            case 0x1F: // RR A
+                A = RR(A);
                 break;
             default:
                 throw new NotImplementedException($"Opcode 0xCB{instruction:X2} not implemented.");

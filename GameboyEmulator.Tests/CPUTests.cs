@@ -1230,4 +1230,46 @@ public class CpuTests
         Assert.False(cpu.n);
         Assert.False(cpu.h);
     }
+    [Fact]
+    public void CBPrefixRRBasicTest()
+    {
+        var (cpu, bus, _) = CreateSystem(new byte[]
+        {
+        0x3E, 255, // LD A, 255
+        0xC6, 1,   // ADD A, 1 (sets carry)
+        0x21, 0x00, 0xC0, // LD HL, 0xC000
+        0x36, 0x80, // LD (HL), 0x80
+        0xCB, 0x1E  // RR (HL) (CB-prefixed opcode)
+        });
+
+        for (int i = 0; i < 5; i++)
+            cpu.Step();
+
+        Assert.Equal(0xC0, bus.ReadByte(0xC000));
+        Assert.False(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
+    [Fact]
+    public void CBPrefixRLBasicTest()
+    {
+        var (cpu, bus, _) = CreateSystem(new byte[]
+        {
+        0x3E, 255, // LD A, 255
+        0xC6, 1,   // ADD A, 1 (sets carry)
+        0x21, 0x00, 0xC0, // LD HL, 0xC000
+        0x36, 0x01, // LD (HL), 0x80
+        0xCB, 0x16  // RL (HL) (CB-prefixed opcode)
+        });
+
+        for (int i = 0; i < 5; i++)
+            cpu.Step();
+
+        Assert.Equal(0x03, bus.ReadByte(0xC000));
+        Assert.False(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
 }
