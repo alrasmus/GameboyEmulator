@@ -901,6 +901,26 @@ public class CPU
 
         return (byte)result;
     }
+    private byte SLA(byte value) // Shift left arithmetic for CB-prefixed instructions
+    {
+        c = (value & 0x80) != 0; // Set carry flag if bit 7 was set
+        int result = value << 1; // Shift left
+        z = (byte)result == 0;
+        n = false;
+        h = false;
+
+        return (byte)result;
+    }
+    private byte SRA(byte value) // Shift right arithmetic for CB-prefixed instructions
+    {
+        c = (value & 0x01) != 0; // Set carry flag if bit 0 was set
+        int result = (value >> 1) | (value & 0x80); // Shift right, preserving bit 7
+        z = (byte)result == 0;
+        n = false;
+        h = false;
+
+        return (byte)result;
+    }
     private void ExecuteCB() // CB-prefixed instruction handler
     {
         // Fetch next instruction byte after 0xCB prefix
@@ -1004,6 +1024,54 @@ public class CPU
                 break;
             case 0x1F: // RR A
                 A = RR(A);
+                break;
+            case 0x20: // SLA B
+                B = SLA(B);
+                break;
+            case 0x21: // SLA C
+                C = SLA(C);
+                break;
+            case 0x22: // SLA D
+                D = SLA(D);
+                break;
+            case 0x23: // SLA E
+                E = SLA(E);
+                break;
+            case 0x24: // SLA H
+                H = SLA(H);
+                break;
+            case 0x25: // SLA L
+                L = SLA(L);
+                break;
+            case 0x26: // SLA (HL)
+                _bus.WriteByte(HL, SLA(_bus.ReadByte(HL)));
+                break;
+            case 0x27: // SLA A
+                A = SLA(A);
+                break;
+            case 0x28: // SRA B
+                B = SRA(B);
+                break;
+            case 0x29: // SRA C
+                C = SRA(C);
+                break;
+            case 0x2A: // SRA D
+                D = SRA(D);
+                break;
+            case 0x2B: // SRA E
+                E = SRA(E);
+                break;
+            case 0x2C: // SRA H
+                H = SRA(H);
+                break;
+            case 0x2D: // SRA L
+                L = SRA(L);
+                break;
+            case 0x2E: // SRA (HL)
+                _bus.WriteByte(HL, SRA(_bus.ReadByte(HL)));
+                break;
+            case 0x2F: // SRA A
+                A = SRA(A);
                 break;
             default:
                 throw new NotImplementedException($"Opcode 0xCB{instruction:X2} not implemented.");

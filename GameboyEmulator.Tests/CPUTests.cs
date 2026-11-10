@@ -1272,4 +1272,76 @@ public class CpuTests
         Assert.False(cpu.n);
         Assert.False(cpu.h);
     }
+    [Fact]
+    public void CBPrefixSLABasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x06, 0x81, // LD B, 0x81
+        0xCB, 0x20  // SLA B (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0x02, cpu.B);
+        Assert.True(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
+    [Fact]
+    public void CBPrefixSRABasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x06, 0x81, // LD B, 0x81
+        0xCB, 0x28  // SRA B (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0xC0, cpu.B);
+        Assert.True(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
+    [Fact]
+    public void CBPrefixSRANonCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x06, 0x80, // LD B, 0x80
+        0xCB, 0x28  // SRA B (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0xC0, cpu.B);
+        Assert.False(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
+    [Fact]
+    public void CBPrefixSLANonCarryTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x06, 0x01, // LD B, 0x01
+        0xCB, 0x20  // SLA B (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0x02, cpu.B);
+        Assert.False(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
 }
