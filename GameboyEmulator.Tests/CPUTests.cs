@@ -1398,4 +1398,38 @@ public class CpuTests
         Assert.False(cpu.n);
         Assert.False(cpu.h);
     }
+    [Fact]
+    public void CBPrefixBITPositiveTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x06, 0x08, // LD B, 0x08
+        0xCB, 0x58  // BIT 3, B (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0x08, cpu.B);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.True(cpu.h);
+    }
+    [Fact]
+    public void CBPrefixBITNegativeTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x06, 0x04, // LD B, 0x04
+        0xCB, 0x58  // BIT 3, B (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0x04, cpu.B);
+        Assert.True(cpu.z);
+        Assert.False(cpu.n);
+        Assert.True(cpu.h);
+    }
 }

@@ -941,6 +941,12 @@ public class CPU
 
         return (byte)result;
     }
+    private void BIT(byte value, int bit) // Test bit for CB-prefixed instruction
+    {
+        z = ((value >> bit) & 0x01) == 0; // Set zero flag if the tested bit is 0
+        n = false;
+        h = true;
+    }
     private void ExecuteCB() // CB-prefixed instruction handler
     {
         // Fetch next instruction byte after 0xCB prefix
@@ -1140,6 +1146,198 @@ public class CPU
                 break;
             case 0x3F: // SRL A
                 A = SRL(A);
+                break;
+            case 0x40: // BIT 0, B
+                BIT(B, 0);
+                break;
+            case 0x41: // BIT 0, C
+                BIT(C, 0);
+                break;
+            case 0x42: // BIT 0, D
+                BIT(D, 0);
+                break;
+            case 0x43: // BIT 0, E
+                BIT(E, 0);
+                break;
+            case 0x44: // BIT 0, H
+                BIT(H, 0);
+                break;
+            case 0x45: // BIT 0, L
+                BIT(L, 0);
+                break;
+            case 0x46: // BIT 0, (HL)
+                BIT(_bus.ReadByte(HL), 0);
+                break;
+            case 0x47: // BIT 0, A
+                BIT(A, 0);
+                break;
+            case 0x48: // BIT 1, B
+                BIT(B, 1);
+                break;
+            case 0x49: // BIT 1, C
+                BIT(C, 1);
+                break;
+            case 0x4A: // BIT 1, D
+                BIT(D, 1);
+                break;
+            case 0x4B: // BIT 1, E
+                BIT(E, 1);
+                break;
+            case 0x4C: // BIT 1, H
+                BIT(H, 1);
+                break;
+            case 0x4D: // BIT 1, L
+                BIT(L, 1);
+                break;
+            case 0x4E: // BIT 1, (HL)
+                BIT(_bus.ReadByte(HL), 1);
+                break;
+            case 0x4F: // BIT 1, A
+                BIT(A, 1);
+                break;
+            case 0x50: // BIT 2, B
+                BIT(B, 2);
+                break;
+            case 0x51: // BIT 2, C
+                BIT(C, 2);
+                break;
+            case 0x52: // BIT 2, D
+                BIT(D, 2);
+                break;
+            case 0x53: // BIT 2, E
+                BIT(E, 2);
+                break;
+            case 0x54: // BIT 2, H
+                BIT(H, 2);
+                break;
+            case 0x55: // BIT 2, L
+                BIT(L, 2);
+                break;
+            case 0x56: // BIT 2, (HL)
+                BIT(_bus.ReadByte(HL), 2);
+                break;
+            case 0x57: // BIT 2, A
+                BIT(A, 2);
+                break;
+            case 0x58: // BIT 3, B
+                BIT(B, 3);
+                break;
+            case 0x59: // BIT 3, C
+                BIT(C, 3);
+                break;
+            case 0x5A: // BIT 3, D
+                BIT(D, 3);
+                break;
+            case 0x5B: // BIT 3, E
+                BIT(E, 3);
+                break;
+            case 0x5C: // BIT 3, H
+                BIT(H, 3);
+                break;
+            case 0x5D: // BIT 3, L
+                BIT(L, 3);
+                break;
+            case 0x5E: // BIT 3, (HL)
+                BIT(_bus.ReadByte(HL), 3);
+                break;
+            case 0x5F: // BIT 3, A
+                BIT(A, 3);
+                break;
+            case 0x60: // BIT 4, B
+                BIT(B, 4);
+                break;
+            case 0x61: // BIT 4, C
+                BIT(C, 4);
+                break;
+            case 0x62: // BIT 4, D
+                BIT(D, 4);
+                break;
+            case 0x63: // BIT 4, E
+                BIT(E, 4);
+                break;
+            case 0x64: // BIT 4, H
+                BIT(H, 4);
+                break;
+            case 0x65: // BIT 4, L
+                BIT(L, 4);
+                break;
+            case 0x66: // BIT 4, (HL)
+                BIT(_bus.ReadByte(HL), 4);
+                break;
+            case 0x67: // BIT 4, A
+                BIT(A, 4);
+                break;
+            case 0x68: // BIT 5, B
+                BIT(B, 5);
+                break;
+            case 0x69: // BIT 5, C
+                BIT(C, 5);
+                break;
+            case 0x6A: // BIT 5, D
+                BIT(D, 5);
+                break;
+            case 0x6B: // BIT 5, E
+                BIT(E, 5);
+                break;
+            case 0x6C: // BIT 5, H
+                BIT(H, 5);
+                break;
+            case 0x6D: // BIT 5, L
+                BIT(L, 5);
+                break;
+            case 0x6E: // BIT 5, (HL)
+                BIT(_bus.ReadByte(HL), 5);
+                break;
+            case 0x6F: // BIT 5, A
+                BIT(A, 5);
+                break;
+            case 0x70: // BIT 6, B
+                BIT(B, 6);
+                break;
+            case 0x71: // BIT 6, C
+                BIT(C, 6);
+                break;
+            case 0x72: // BIT 6, D
+                BIT(D, 6);
+                break;
+            case 0x73: // BIT 6, E
+                BIT(E, 6);
+                break;
+            case 0x74: // BIT 6, H
+                BIT(H, 6);
+                break;
+            case 0x75: // BIT 6, L
+                BIT(L, 6);
+                break;
+            case 0x76: // BIT 6, (HL)
+                BIT(_bus.ReadByte(HL), 6);
+                break;
+            case 0x77: // BIT 6, A
+                BIT(A, 6);
+                break;
+            case 0x78: // BIT 7, B
+                BIT(B, 7);
+                break;
+            case 0x79: // BIT 7, C
+                BIT(C, 7);
+                break;
+            case 0x7A: // BIT 7, D
+                BIT(D, 7);
+                break;
+            case 0x7B: // BIT 7, E
+                BIT(E, 7);
+                break;
+            case 0x7C: // BIT 7, H
+                BIT(H, 7);
+                break;
+            case 0x7D: // BIT 7, L
+                BIT(L, 7);
+                break;
+            case 0x7E: // BIT 7, (HL)
+                BIT(_bus.ReadByte(HL), 7);
+                break;
+            case 0x7F: // BIT 7, A
+                BIT(A, 7);
                 break;
             default:
                 throw new NotImplementedException($"Opcode 0xCB{instruction:X2} not implemented.");
