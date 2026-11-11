@@ -1344,4 +1344,58 @@ public class CpuTests
         Assert.False(cpu.n);
         Assert.False(cpu.h);
     }
+    [Fact]
+    public void CBPrefixSwapBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x06, 0xE8, // LD B, 0xE8
+        0xCB, 0x30  // SWAP B (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0x8E, cpu.B);
+        Assert.False(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
+    [Fact]
+    public void CBPrefixSRLBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x06, 0xE9, // LD B, 0xE9
+        0xCB, 0x38  // SRL B (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0x74, cpu.B);
+        Assert.True(cpu.c);
+        Assert.False(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
+    [Fact]
+    public void CBPrefixSRLZeroTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x06, 0x01, // LD B, 0x01
+        0xCB, 0x38  // SRL B (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0x00, cpu.B);
+        Assert.True(cpu.c);
+        Assert.True(cpu.z);
+        Assert.False(cpu.n);
+        Assert.False(cpu.h);
+    }
 }

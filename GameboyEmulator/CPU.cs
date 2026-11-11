@@ -921,6 +921,26 @@ public class CPU
 
         return (byte)result;
     }
+    private byte SWAP(byte value) // swap upper and lower nibbles for CB-prefixed instructions
+    {
+        int result = ((value & 0x0F) << 4) | ((value & 0xF0) >> 4); // swap nibbles
+        z = (byte)result == 0;
+        n = false;
+        h = false;
+        c = false;
+
+        return (byte)result;
+    }
+    private byte SRL(byte value) // Shift right logical for CB-prefixed instructions
+    {
+        c = (value & 0x01) != 0; // Set carry flag if bit 0 was set
+        int result = value >> 1; // Shift right
+        z = (byte)result == 0;
+        n = false;
+        h = false;
+
+        return (byte)result;
+    }
     private void ExecuteCB() // CB-prefixed instruction handler
     {
         // Fetch next instruction byte after 0xCB prefix
@@ -1072,6 +1092,54 @@ public class CPU
                 break;
             case 0x2F: // SRA A
                 A = SRA(A);
+                break;
+            case 0x30: // SWAP B
+                B = SWAP(B);
+                break;
+            case 0x31: // SWAP C
+                C = SWAP(C);
+                break;
+            case 0x32: // SWAP D
+                D = SWAP(D);
+                break;
+            case 0x33: // SWAP E
+                E = SWAP(E);
+                break;
+            case 0x34: // SWAP H
+                H = SWAP(H);
+                break;
+            case 0x35: // SWAP L
+                L = SWAP(L);
+                break;
+            case 0x36: // SWAP (HL)
+                _bus.WriteByte(HL, SWAP(_bus.ReadByte(HL)));
+                break;
+            case 0x37: // SWAP A
+                A = SWAP(A);
+                break;
+            case 0x38: // SRL B
+                B = SRL(B);
+                break;
+            case 0x39: // SRL C
+                C = SRL(C);
+                break;
+            case 0x3A: // SRL D
+                D = SRL(D);
+                break;
+            case 0x3B: // SRL E
+                E = SRL(E);
+                break;
+            case 0x3C: // SRL H
+                H = SRL(H);
+                break;
+            case 0x3D: // SRL L
+                L = SRL(L);
+                break;
+            case 0x3E: // SRL (HL)
+                _bus.WriteByte(HL, SRL(_bus.ReadByte(HL)));
+                break;
+            case 0x3F: // SRL A
+                A = SRL(A);
                 break;
             default:
                 throw new NotImplementedException($"Opcode 0xCB{instruction:X2} not implemented.");
