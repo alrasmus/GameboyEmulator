@@ -1432,4 +1432,34 @@ public class CpuTests
         Assert.False(cpu.n);
         Assert.True(cpu.h);
     }
+    [Fact]
+    public void CBPrefixRESBasicTest()
+    {
+        var (cpu, _, _) = CreateSystem(new byte[]
+        {
+        0x06, 0xFF, // LD B, 0xFF
+        0xCB, 0x80  // RES 0, B (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0xFE, cpu.B);
+    }
+    [Fact]
+    public void CBPrefixSETBasicTest()
+    {
+        var (cpu, bus, _) = CreateSystem(new byte[]
+        {
+        0x21, 0x00, 0xC0, // LD HL, 0xC000
+        0x36, 0x00,       // LD (HL), 0x00
+        0xCB, 0xC6  // SET 0, (HL) (CB-prefixed opcode)
+        });
+
+        cpu.Step();
+        cpu.Step();
+        cpu.Step();
+
+        Assert.Equal(0x01, bus.ReadByte(0xC000));
+    }
 }
