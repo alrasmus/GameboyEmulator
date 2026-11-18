@@ -23,15 +23,23 @@ public class CPU
     public bool h { get; private set; } // half-carry flag
     public bool c { get; private set; } // carry flag
 
-    public byte F => (byte)(
-        (z ? 0x80 : 0) | (n ? 0x40 : 0) | (h ? 0x20 : 0) | (c ? 0x10 : 0)
-    );
+    public byte F
+    {
+        get => (byte)((z ? 0x80 : 0) | (n ? 0x40 : 0) | (h ? 0x20 : 0) | (c ? 0x10 : 0));
+        private set
+        {
+            z = (value & 0x80) != 0;
+            n = (value & 0x40) != 0;
+            h = (value & 0x20) != 0;
+            c = (value & 0x10) != 0;
+        }
+    }
 
     // 16-bit register pairs
     public ushort BC
     {
         get => (ushort)((B << 8) | C);
-        set
+        private set
         {
             B = (byte)(value >> 8);
             C = (byte)(value & 0xFF);
@@ -40,7 +48,7 @@ public class CPU
     public ushort DE
     {
         get => (ushort)((D << 8) | E);
-        set
+        private set
         {
             D = (byte)(value >> 8);
             E = (byte)(value & 0xFF);
@@ -49,11 +57,16 @@ public class CPU
     public ushort HL 
     {
         get => (ushort)((H << 8) | L);
-        set
+        private set
         {
             H = (byte)(value >> 8);
             L = (byte)(value & 0xFF);
         }
+    }
+    public ushort AF
+    {
+        get => (ushort)((A << 8) | F);
+        private set { A = (byte)(value >> 8); F = (byte)value; }
     }
 
     public CPU(MemoryBus bus)
@@ -264,6 +277,22 @@ public class CPU
         n = false;
         h = false;
     }
+    private ushort POP() // helper method for POP opcodes
+    {
+        byte low = _bus.ReadByte(SP);
+        SP++;
+        byte high = _bus.ReadByte(SP);
+        SP++;
+
+        return (ushort)((high << 8) | low);
+    }
+    private void PUSH(ushort value)
+    {
+        SP--;
+        _bus.WriteByte(SP, (byte)(value >> 8)); // write high byte
+        SP--;
+        _bus.WriteByte(SP, (byte)(value & 0xFF)); // write low byte
+    } 
     public void Step()
     {
         // Fetch next instruction byte and execute it
@@ -302,6 +331,9 @@ public class CPU
                 break;
             case 0x0A: // LD A, (BC)
                 A = _bus.ReadByte(BC);
+                break;
+            case 0x0B: // DEC BC
+                BC--;
                 break;
             case 0x0C: // INC C
                 C = INC(C);
@@ -342,6 +374,9 @@ public class CPU
                 break;
             case 0x1A: // LD A, (DE)
                 A = _bus.ReadByte(DE);
+                break;
+            case 0x1B: // DEC DE
+                DE--;
                 break;
             case 0x1C: // INC E
                 E = INC(E);
@@ -385,6 +420,9 @@ public class CPU
                 A = _bus.ReadByte(HL);
                 HL++;
                 break;
+            case 0x2B: // DEC HL
+                HL--;
+                break;
             case 0x2C: // INC L
                 L = INC(L);
                 break;
@@ -399,7 +437,7 @@ public class CPU
                 n = true;
                 h = true;
                 break;
-            case 0x031: // LD SP, d16
+            case 0x31: // LD SP, d16
                 SP = (ushort)(FetchByte() | (FetchByte() << 8));
                 break;
             case 0x32: // LD (HL-), A
@@ -828,6 +866,12 @@ public class CPU
             case 0xBF: // CP A
                 CP(A);
                 break;
+            case 0xC1: // POP BC
+                BC = POP();
+                break;
+            case 0xC5: // PUSH BC
+                PUSH(BC);
+                break;
             case 0xC6: // ADD A, d8
                 ADD(FetchByte());
                 break;
@@ -837,17 +881,35 @@ public class CPU
             case 0xCE: // ADC A, d8
                 ADC(FetchByte());
                 break;
+            case 0xD1: // POP DE
+                DE = POP();
+                break;
+            case 0xD5: // PUSH DE
+                PUSH(DE);
+                break;
             case 0xD6: // SUB d8
                 SUB(FetchByte());
                 break;
             case 0xDE: // SBC d8
                 SBC(FetchByte());
                 break;
+            case 0xE1: // POP HL
+                HL = POP();
+                break;
+            case 0xE5: // PUSH HL
+                PUSH(HL);
+                break;
             case 0xE6: // AND d8
                 AND(FetchByte());
                 break;
             case 0xEE: // XOR d8
                 XOR(FetchByte());
+                break;
+            case 0xF1: // POP AF
+                AF = POP();
+                break;
+            case 0xF5: // PUSH AF
+                PUSH(AF);
                 break;
             case 0xF6: // OR d8
                 OR(FetchByte());
